@@ -12,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:show_buffering="when_playing"
+        app:controller_layout_id="@layout/custom_controls"
         app:use_controller="true" />
 
     <!-- Indicador de carregamento -->
@@ -22,19 +23,5 @@
         android:layout_height="48dp"
         android:layout_centerInParent="true"
         android:visibility="gone" />
-
-    <!-- Botão de fechar -->
-    <ImageButton
-        android:id="@+id/close_button"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_margin="16dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Fechar"
-        android:scaleType="centerInside"
-        android:src="@drawable/ic_close"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        app:tint="#FFFFFF" />
 
 </RelativeLayout>

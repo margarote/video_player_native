@@ -11,6 +11,8 @@
         <activity
             android:name=".VideoPlayerActivity"
             android:theme="@style/VideoPlayerTheme"
+            android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
             android:exported="true"> <!-- Ajuste conforme necessidade -->
         </activity>
     </application>

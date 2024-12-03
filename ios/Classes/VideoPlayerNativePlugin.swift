@@ -7,6 +7,9 @@ public class VideoPlayerNativePlugin: NSObject, FlutterPlugin {
         let channel = FlutterMethodChannel(name: "video_player_native", binaryMessenger: registrar.messenger())
         let instance = VideoPlayerNativePlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
+        
+        let factory = VideoPlayerViewFactory(registrar: registrar)
+        registrar.register(factory, withId: "video_player_native_view")
     }
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {

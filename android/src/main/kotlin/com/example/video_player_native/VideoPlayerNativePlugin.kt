@@ -2,9 +2,7 @@
 package com.example.video_player_native
 
 import android.app.Activity
-import android.app.Application
 import android.content.Context
-import android.os.Bundle
 import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -13,13 +11,22 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 /** VideoPlayerNativePlugin */
-class VideoPlayerNativePlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware, Application.ActivityLifecycleCallbacks {
+class VideoPlayerNativePlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware {
     private lateinit var channel: MethodChannel
+    private lateinit var methodChannelVideo: MethodChannel
     private var activity: Activity? = null
+    private lateinit var context: Context
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "video_player_native")
         channel.setMethodCallHandler(this)
+        context = flutterPluginBinding.applicationContext
+        methodChannelVideo = MethodChannel(flutterPluginBinding.binaryMessenger, "video_player_native_view")
+
+        // Registrar o PlatformView
+        flutterPluginBinding
+            .platformViewRegistry
+            .registerViewFactory("video_player_native_view", VideoPlayerViewFactory(methodChannelVideo))
     }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: MethodChannel.Result) {
@@ -55,33 +62,5 @@ class VideoPlayerNativePlugin : FlutterPlugin, MethodChannel.MethodCallHandler, 
 
     override fun onDetachedFromActivity() {
         activity = null
-    }
-
-    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onActivityStarted(activity: Activity) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onActivityResumed(activity: Activity) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onActivityPaused(activity: Activity) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onActivityStopped(activity: Activity) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onActivityDestroyed(activity: Activity) {
-        TODO("Not yet implemented")
     }
 }
