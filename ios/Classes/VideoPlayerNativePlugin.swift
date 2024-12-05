@@ -6,6 +6,7 @@ public class VideoPlayerNativePlugin: NSObject, FlutterPlugin {
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "video_player_native", binaryMessenger: registrar.messenger())
         let instance = VideoPlayerNativePlugin()
+        requestPIPBackgroundMode()
         registrar.addMethodCallDelegate(instance, channel: channel)
         
         let factory = VideoPlayerViewFactory(registrar: registrar)
@@ -40,5 +41,14 @@ public class VideoPlayerNativePlugin: NSObject, FlutterPlugin {
             }
         }
     }
-
+    
+    
+   static public func requestPIPBackgroundMode() {
+            let session = AVAudioSession.sharedInstance()
+            do {
+                try session.setCategory(.playback, mode: .moviePlayback)
+            } catch let error {
+                print(error.localizedDescription)
+            }
+        }
 }
