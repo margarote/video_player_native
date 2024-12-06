@@ -8,13 +8,14 @@ import 'video_player_custom_widget.dart';
 
 class VideoPlayerNative {
   final MethodChannel _channel = const MethodChannel('video_player_native_view');
+  final MethodChannel _channelNative = const MethodChannel('video_player_native');
   bool isFullscreen = false;
   double currentPosition = 0;
 
   /// Método para abrir a tela nativa do player de vídeo
   Future<void> openVideoPlayer(String url) async {
     try {
-      await _channel.invokeMethod('openVideoPlayer', {'url': url});
+      await _channelNative.invokeMethod('openVideoPlayer', {'url': url});
     } on PlatformException catch (e) {
       debugPrint("Erro ao abrir o player nativo: ${e.message}");
     }
