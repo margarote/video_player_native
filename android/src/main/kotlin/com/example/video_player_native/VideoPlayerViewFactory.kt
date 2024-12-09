@@ -13,6 +13,6 @@ class VideoPlayerViewFactory(
 
     override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
         val creationParams = args as? Map<String, Any>
-        return VideoPlayerView(context, viewId, creationParams, messenger)
+        return VideoPlayerView(context, creationParams, messenger)
     }
 }

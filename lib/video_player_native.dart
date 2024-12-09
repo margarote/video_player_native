@@ -24,11 +24,13 @@ class VideoPlayerNative {
   Future<void> seekToSeconds(double seconds) async {
     try {
       log(seconds.toString());
-      await _channel.invokeMethod('seekTo', {'seconds': seconds});
+      await _channelNative.invokeMethod('setPlaybackPosition', {'position': seconds});
     } on PlatformException catch (e) {
       if (kDebugMode) {
         print("Erro ao buscar para $seconds segundos: ${e.message}");
       }
+    } catch (e) {
+      log(e.toString());
     }
   }
 
@@ -37,7 +39,7 @@ class VideoPlayerNative {
     void Function(bool isFullScreen, double currentPosition)? onChangeFullScreen,
     void Function(bool isInPIP)? onChangeIsInPIP,
   }) {
-    _channel.setMethodCallHandler((call) async {
+    _channelNative.setMethodCallHandler((call) async {
       _handleNativeMethodCall(
         call,
         (isFullscreen, currentPosition) {
@@ -49,6 +51,7 @@ class VideoPlayerNative {
 
           onChangeFullScreen?.call(isFullscreen, currentPosition);
         },
+        onDuration,
       );
     });
   }
@@ -56,6 +59,7 @@ class VideoPlayerNative {
   Future<void> _handleNativeMethodCall(
     MethodCall call,
     void Function(bool isFullScreen, double currentPosition)? onChangeFullScreen,
+    void Function(double position)? onChangePosition,
   ) async {
     switch (call.method) {
       case 'onFullscreenChange':
@@ -69,6 +73,9 @@ class VideoPlayerNative {
           print("Tela cheia: $isFullscreen");
         }
         break;
+      case 'onTimeUpdate':
+        double seconds = call.arguments;
+        onChangePosition?.call(seconds);
       default:
         if (kDebugMode) {
           print("Método não implementado: ${call.method}");
@@ -77,7 +84,11 @@ class VideoPlayerNative {
   }
 
   void setFullScreen(bool value) {
-    _channel.invokeMethod('set_fullscreen', {'value': value});
+    _channelNative.invokeMethod('set_fullscreen', {'value': value});
+  }
+
+  void setOnPipModeChanged(bool value) {
+    _channelNative.invokeMethod('onPipModeChanged', {'isInPip': value});
   }
 
   /// Widget para embutir o player de vídeo nativo
@@ -91,7 +102,7 @@ class VideoPlayerNative {
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       // iOS
       return SizedBox(
-        height: 248,
+        height: 308,
         width: double.infinity,
         child: UiKitView(
           viewType: 'video_player_native_view',

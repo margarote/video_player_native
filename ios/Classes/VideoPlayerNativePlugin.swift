@@ -9,10 +9,10 @@ public class VideoPlayerNativePlugin: NSObject, FlutterPlugin {
         requestPIPBackgroundMode()
         registrar.addMethodCallDelegate(instance, channel: channel)
         
-        let factory = VideoPlayerViewFactory(registrar: registrar)
+        let factory = VideoPlayerViewFactory(registrar: registrar, channel: channel)
         registrar.register(factory, withId: "video_player_native_view")
     }
-
+    
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         if call.method == "openVideoPlayer" {
             guard let args = call.arguments as? [String: Any],
@@ -23,18 +23,19 @@ public class VideoPlayerNativePlugin: NSObject, FlutterPlugin {
             }
             playVideo(url: url)
             result("Video launched successfully")
-        } else {
+        }
+        else {
             result(FlutterMethodNotImplemented)
         }
     }
-
+    
     private func playVideo(url: URL) {
         let playerItem = VideoCacheManager.shared.configureCaching(for: url)
         let player = AVPlayer(playerItem: playerItem)
-
+        
         let playerViewController = AVPlayerViewController()
         playerViewController.player = player
-
+        
         if let rootVC = UIApplication.shared.delegate?.window??.rootViewController {
             rootVC.present(playerViewController, animated: true) {
                 player.play()
@@ -43,12 +44,12 @@ public class VideoPlayerNativePlugin: NSObject, FlutterPlugin {
     }
     
     
-   static public func requestPIPBackgroundMode() {
-            let session = AVAudioSession.sharedInstance()
-            do {
-                try session.setCategory(.playback, mode: .moviePlayback)
-            } catch let error {
-                print(error.localizedDescription)
-            }
+    static public func requestPIPBackgroundMode() {
+        let session = AVAudioSession.sharedInstance()
+        do {
+            try session.setCategory(.playback, mode: .moviePlayback)
+        } catch let error {
+            print(error.localizedDescription)
         }
+    }
 }

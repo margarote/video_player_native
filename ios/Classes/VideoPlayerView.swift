@@ -5,7 +5,7 @@ import AVFoundation
 class VideoPlayerView: NSObject, FlutterPlatformView {
     private var _view: VideoPlayerUIView
     
-    init(frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?, registrar: FlutterPluginRegistrar) {
+    init(frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?, registrar: FlutterPluginRegistrar, channel: FlutterMethodChannel) {
         // Obter a URL do vídeo dos argumentos
         var videoURL: URL?
         if let argsDict = args as? [String: Any],
@@ -15,9 +15,9 @@ class VideoPlayerView: NSObject, FlutterPlatformView {
         }
         
         if let url = videoURL {
-            _view = VideoPlayerUIView(frame: frame, url: url)
+            _view = VideoPlayerUIView(frame: frame, url: url, channel: channel)
         } else {
-            _view = VideoPlayerUIView(frame: frame, url: URL(string: "about:blank")!)
+            _view = VideoPlayerUIView(frame: frame, url: URL(string: "about:blank")!, channel: channel)
         }
         
         super.init()

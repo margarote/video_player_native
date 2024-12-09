@@ -3,15 +3,14 @@ package com.example.video_player_native
 import android.content.Context
 import android.graphics.Color
 import android.net.Uri
-import android.os.Build
-import android.util.Log
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ProgressBar
 import androidx.annotation.OptIn
-import androidx.annotation.RequiresApi
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -22,12 +21,12 @@ import androidx.media3.ui.PlayerView
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 import androidx.media3.common.util.Util
+import androidx.media3.exoplayer.analytics.AnalyticsListener
 import io.flutter.plugin.common.MethodCall
 
 @OptIn(UnstableApi::class)
 class VideoPlayerView(
     context: Context,
-    id: Int,
     creationParams: Map<String, Any>?,
     messenger: MethodChannel
 ) : PlatformView, MethodChannel.MethodCallHandler {
@@ -40,6 +39,15 @@ class VideoPlayerView(
     private var isFullscreen = false
 
     private val videoPlayerChannel: MethodChannel
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val updateIntervalMs: Long = 1000 // 1 segundo
+    private val updateTimeRunnable = object : Runnable {
+        override fun run() {
+            notifyTimeUpdate()
+            handler.postDelayed(this, updateIntervalMs)
+        }
+    }
 
     init {
         val inflater = LayoutInflater.from(context)
@@ -59,7 +67,6 @@ class VideoPlayerView(
         val durationInitial = creationParams?.get("duration_initial") as? Int ?: 0
 
         if (url.isEmpty()) {
-            // Tratar URL vazia
             messenger.invokeMethod("onError", "URL do vídeo está vazia")
         }
 
@@ -101,25 +108,35 @@ class VideoPlayerView(
 
         // Configurar o MediaItem
         val mediaItem = MediaItem.fromUri(Uri.parse(url))
+        exoPlayer.playWhenReady = false
         exoPlayer.setMediaItem(mediaItem)
         exoPlayer.prepare()
-        exoPlayer.playWhenReady = true
-        val positionMs = (durationInitial * 1000).toLong()
-        exoPlayer.seekTo(positionMs)
+//        val positionMs = (durationInitial * 1000).toLong()
+//        exoPlayer.seekTo(positionMs)
 
         // Listener para atualizar o estado de bufferização
         exoPlayer.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) {
                 when (state) {
                     Player.STATE_BUFFERING -> progressBar.visibility = View.VISIBLE
-                    Player.STATE_READY, Player.STATE_ENDED, Player.STATE_IDLE -> progressBar.visibility = View.GONE
+                    Player.STATE_READY -> {
+                        progressBar.visibility = View.GONE
+                        startUpdatingTime()
+                    }
+                    Player.STATE_ENDED, Player.STATE_IDLE -> {
+                        progressBar.visibility = View.GONE
+                        stopUpdatingTime()
+                    }
                 }
             }
 
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
                 messenger.invokeMethod("onError", error.message)
+                stopUpdatingTime()
             }
         })
+
+        // Atualizar o tempo de reprodução a cada mudança significativa
 
         // Configurar o botão de tela cheia
         fullscreenButton.setOnClickListener {
@@ -131,13 +148,37 @@ class VideoPlayerView(
         videoPlayerChannel.setMethodCallHandler(this)
     }
 
+    private fun startUpdatingTime() {
+        handler.post(updateTimeRunnable)
+    }
+
+    private fun stopUpdatingTime() {
+        handler.removeCallbacks(updateTimeRunnable)
+    }
+
+    private fun notifyTimeUpdate() {
+        if (exoPlayer.isPlaying) {
+            val currentPositionMs = exoPlayer.currentPosition
+            val currentPositionSeconds = currentPositionMs / 1000.0
+
+            println(currentPositionMs)
+
+            videoPlayerChannel.invokeMethod(
+                "onTimeUpdate",
+                currentPositionSeconds
+            )
+        }
+    }
+
+
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "seekTo" -> {
-                val seconds = call.argument<Double>("seconds")
+            "setPlaybackPosition" -> {
+                val seconds = call.argument<Double>("position")
                 if (seconds != null) {
                     val positionMs = (seconds * 1000).toLong()
                     exoPlayer.seekTo(positionMs)
+                    exoPlayer.play()
                     result.success(null)
                 } else {
                     result.error("INVALID_ARGUMENT", "O parâmetro 'seconds' é necessário", null)
@@ -181,12 +222,12 @@ class VideoPlayerView(
      */
     fun handlePipChange(isInPictureInPictureMode: Boolean) {
         playerView.useController = !isInPictureInPictureMode
-        onFullscreenChange(false)
     }
 
     override fun getView(): View = rootView
 
     override fun dispose() {
+        stopUpdatingTime()
         exoPlayer.release()
     }
 }

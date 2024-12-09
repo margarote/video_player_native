@@ -3,9 +3,11 @@ import UIKit
 
 class VideoPlayerViewFactory: NSObject, FlutterPlatformViewFactory {
     private var registrar: FlutterPluginRegistrar
+    private var flutterChannel: FlutterMethodChannel
 
-    init(registrar: FlutterPluginRegistrar) {
+    init(registrar: FlutterPluginRegistrar, channel: FlutterMethodChannel) {
         self.registrar = registrar
+        self.flutterChannel = channel
         super.init()
     }
 
@@ -22,7 +24,8 @@ class VideoPlayerViewFactory: NSObject, FlutterPlatformViewFactory {
             frame: frame,
             viewIdentifier: viewId,
             arguments: args,
-            registrar: registrar
+            registrar: registrar,
+            channel: flutterChannel
         )
     }
 }

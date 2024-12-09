@@ -13,7 +13,6 @@ import io.flutter.plugin.common.MethodChannel
 /** VideoPlayerNativePlugin */
 class VideoPlayerNativePlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware {
     private lateinit var channel: MethodChannel
-    private lateinit var methodChannelVideo: MethodChannel
     private var activity: Activity? = null
     private lateinit var context: Context
 
@@ -21,12 +20,11 @@ class VideoPlayerNativePlugin : FlutterPlugin, MethodChannel.MethodCallHandler, 
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "video_player_native")
         channel.setMethodCallHandler(this)
         context = flutterPluginBinding.applicationContext
-        methodChannelVideo = MethodChannel(flutterPluginBinding.binaryMessenger, "video_player_native_view")
 
         // Registrar o PlatformView
         flutterPluginBinding
             .platformViewRegistry
-            .registerViewFactory("video_player_native_view", VideoPlayerViewFactory(methodChannelVideo))
+            .registerViewFactory("video_player_native_view", VideoPlayerViewFactory(channel))
     }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: MethodChannel.Result) {
