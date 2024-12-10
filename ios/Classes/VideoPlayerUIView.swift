@@ -125,13 +125,23 @@ class VideoPlayerUIView: UIView {
         
         timeObserverToken = player.addPeriodicTimeObserver(forInterval: time, queue: .main) { [weak self] time in
             guard let self = self else { return }
-            let currentTime = CMTimeGetSeconds(time)
             
-            // Envia o tempo atual ao Flutter
-            print(currentTime)
-            self.flutterChannel?.invokeMethod("onTimeUpdate", arguments: currentTime)
+            let currentTime = CMTimeGetSeconds(time)
+            let duration = CMTimeGetSeconds(player.currentItem?.duration ?? CMTime.zero)
+            
+            // Evita valores indefinidos ou inválidos para a duração
+            guard duration.isFinite else { return }
+            
+            // Envia o tempo atual e a duração total ao Flutter
+            let arguments: [String: Any] = [
+                "currentTime": currentTime,
+                "duration": duration
+            ]
+            
+            self.flutterChannel?.invokeMethod("onTimeUpdate", arguments: arguments)
         }
     }
+
     
     deinit {
         if let timeObserverToken = timeObserverToken {

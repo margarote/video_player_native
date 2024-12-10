@@ -161,11 +161,22 @@ class VideoPlayerView(
             val currentPositionMs = exoPlayer.currentPosition
             val currentPositionSeconds = currentPositionMs / 1000.0
 
-            println(currentPositionMs)
+            val durationMs = exoPlayer.duration
+            val durationSeconds = if (durationMs > 0) durationMs / 1000.0 else 0.0
 
+            println("Current Position: $currentPositionMs ms")
+            println("Duration: $durationMs ms")
+
+            // Cria um mapa com os dados a serem enviados ao Flutter
+            val arguments = mapOf(
+                "currentTime" to currentPositionSeconds,
+                "duration" to durationSeconds
+            )
+
+            // Envia os dados para o Flutter
             videoPlayerChannel.invokeMethod(
                 "onTimeUpdate",
-                currentPositionSeconds
+                arguments
             )
         }
     }
@@ -230,4 +241,5 @@ class VideoPlayerView(
         stopUpdatingTime()
         exoPlayer.release()
     }
+
 }

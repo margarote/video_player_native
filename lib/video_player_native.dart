@@ -35,7 +35,7 @@ class VideoPlayerNative {
   }
 
   void onPlatformViewCreated({
-    void Function(double duration)? onDuration,
+    void Function(double duration, double currentTime)? onDuration,
     void Function(bool isFullScreen, double currentPosition)? onChangeFullScreen,
     void Function(bool isInPIP)? onChangeIsInPIP,
   }) {
@@ -59,7 +59,7 @@ class VideoPlayerNative {
   Future<void> _handleNativeMethodCall(
     MethodCall call,
     void Function(bool isFullScreen, double currentPosition)? onChangeFullScreen,
-    void Function(double position)? onChangePosition,
+    void Function(double duration, double currentPosition)? onChangePosition,
   ) async {
     switch (call.method) {
       case 'onFullscreenChange':
@@ -74,8 +74,18 @@ class VideoPlayerNative {
         }
         break;
       case 'onTimeUpdate':
-        double seconds = call.arguments;
-        onChangePosition?.call(seconds);
+        // Recebe os argumentos enviados do lado nativo
+        Map<String, dynamic> args = Map<String, dynamic>.from(call.arguments);
+
+// Extrai os valores do mapa
+        double currentTime = args['currentTime'] ?? 0.0;
+        double duration = args['duration'] ?? 0.0;
+
+// Chama o callback com o tempo atual
+        onChangePosition?.call(
+          duration,
+          currentTime,
+        );
       default:
         if (kDebugMode) {
           print("Método não implementado: ${call.method}");
