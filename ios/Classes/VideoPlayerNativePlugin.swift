@@ -21,15 +21,26 @@ public class VideoPlayerNativePlugin: NSObject, FlutterPlugin {
                 result(FlutterError(code: "INVALID_URL", message: "URL is invalid or missing", details: nil))
                 return
             }
-            playVideo(url: url)
-            result("Video launched successfully")
-        }
-        else {
+            
+            // Verifica se o vídeo está disponível antes de iniciar o player.
+            verifyVideoAvailability(url: url) { available in
+                DispatchQueue.main.async {
+                    if available {
+                        self.playVideo(url: url)
+                        result("Video launched successfully")
+                    } else {
+                        result(FlutterError(code: "VIDEO_UNAVAILABLE", message: "Video not available (404)", details: nil))
+                    }
+                }
+            }
+            
+        } else {
             result(FlutterMethodNotImplemented)
         }
     }
     
     private func playVideo(url: URL) {
+        // Aqui assumimos que o VideoCacheManager só cacheia se o arquivo estiver válido.
         let playerItem = VideoCacheManager.shared.configureCaching(for: url)
         let player = AVPlayer(playerItem: playerItem)
         
@@ -43,6 +54,18 @@ public class VideoPlayerNativePlugin: NSObject, FlutterPlugin {
         }
     }
     
+    private func verifyVideoAvailability(url: URL, completion: @escaping (Bool) -> Void) {
+        var request = URLRequest(url: url)
+        request.httpMethod = "HEAD"
+        
+        URLSession.shared.dataTask(with: request) { _, response, error in
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                completion(true)
+            } else {
+                completion(false)
+            }
+        }.resume()
+    }
     
     static public func requestPIPBackgroundMode() {
         let session = AVAudioSession.sharedInstance()
