@@ -101,6 +101,9 @@ class VideoPlayerUIView: UIView {
     }
     
     private func setupPlayer(url: URL) {
+        
+        // Alterar o esquema da URL para um esquema personalizado
+       
         // Criar o AVPlayer
         let playerItem = VideoCacheManager.shared.configureCaching(for: url)
         player = AVPlayer(playerItem: playerItem)

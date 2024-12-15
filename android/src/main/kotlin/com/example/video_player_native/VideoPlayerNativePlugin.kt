@@ -30,8 +30,12 @@ class VideoPlayerNativePlugin : FlutterPlugin, MethodChannel.MethodCallHandler, 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: MethodChannel.Result) {
         if (call.method == "openVideoPlayer") {
             val url = call.argument<String>("url")
-            if (url != null && activity != null) {
-                VideoPlayerActivity.start(activity!!, url)
+            val momentaryId = call.argument<String>("momentaryId")
+            val fileId = call.argument<String>("fileId")
+            val userId = call.argument<String>("userId")
+
+            if (url != null && activity != null && momentaryId != null && fileId != null && userId != null) {
+                VideoPlayerActivity.start(activity!!, url, momentaryId, fileId, userId)
                 result.success(null)
             } else {
                 result.error("INVALID_ARGUMENTS", "URL inválida ou atividade não disponível.", null)

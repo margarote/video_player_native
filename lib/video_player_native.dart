@@ -13,9 +13,9 @@ class VideoPlayerNative {
   double currentPosition = 0;
 
   /// Método para abrir a tela nativa do player de vídeo
-  Future<void> openVideoPlayer(String url) async {
+  Future<void> openVideoPlayer(String url, {required Map<String, String?> params}) async {
     try {
-      await _channelNative.invokeMethod('openVideoPlayer', {'url': url});
+      await _channelNative.invokeMethod('openVideoPlayer', {'url': url, ...params});
     } on PlatformException catch (e) {
       debugPrint("Erro ao abrir o player nativo: ${e.message}");
     }
