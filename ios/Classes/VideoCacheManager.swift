@@ -5,7 +5,7 @@ class VideoCacheManager: NSObject, AVAssetResourceLoaderDelegate {
     static let shared = VideoCacheManager()
 
     private let cacheConfig: URLCache
-    private let cacheExpiryInSeconds: TimeInterval = 3600 * 24 * 10  // 10 dias
+    private let cacheExpiryInSeconds: TimeInterval = 3600 * 24 * 30  // 30 dias
     private let maxCacheSize: Int = 5 * 1024 * 1024 * 1024  // 5GB
     private let cacheMetadataKey = "VideoCacheMetadata"
     private let metadataQueue = DispatchQueue(

@@ -154,23 +154,30 @@ public class VideoPlayerNativePlugin: NSObject, FlutterPlugin, AVPlayerViewContr
     }
     
     private func sendDataUsage(newValue: Int64) {
+        guard let url = url else { return }
         
-        if self.url == nil { return }
-    
-        if newValue <= totalBytesConsumed { return }
-        
-        totalBytesDownloaded = newValue - totalBytesDownloaded
-        totalBytesConsumed = newValue
-        
-        
-        if VideoCacheManager.shared.isURLMarkedAsSent(url!) { return }
-        
-        guard totalBytesDownloaded > 0 else {
-            print("Nenhum dado baixado da rede. Nenhum envio necessário.")
+        // Se não houve incremento, não faz nada
+        if newValue <= totalBytesConsumed {
             return
         }
         
-        // Enviar os bytes baixados para a API
+        // Calcula somente o delta (bytes recém-baixados)
+        let newlyDownloadedBytes = newValue - totalBytesConsumed
+        
+        // Atualiza o total de bytes consumidos
+        totalBytesConsumed = newValue
+        
+        // Se a URL já foi marcada como “enviada”, não fazer nada
+        if VideoCacheManager.shared.isURLMarkedAsSent(url) {
+            return
+        }
+        
+        // Se não houve bytes a enviar, sai
+        if newlyDownloadedBytes <= 0 {
+            return
+        }
+        
+        // Monta e faz a request com 'newlyDownloadedBytes' ao invés do total
         guard let apiURL = URL(string: "\(apiBaseURL)/revivamomentos/bandwidth/create/usage") else {
             print("URL da API inválida.")
             return
@@ -186,7 +193,8 @@ public class VideoPlayerNativePlugin: NSObject, FlutterPlugin, AVPlayerViewContr
             "user_id": userId,
             "url": videoURL,
             "type_file": "video",
-            "bytes_downloaded": Int(totalBytesDownloaded)
+            // Aqui vai somente o delta recém-baixado
+            "bytes_downloaded": newlyDownloadedBytes
         ]
         
         do {
@@ -207,14 +215,15 @@ public class VideoPlayerNativePlugin: NSObject, FlutterPlugin, AVPlayerViewContr
         }
         task.resume()
     }
-
+    
+    
     static public func requestPIPBackgroundMode() {
-            let session = AVAudioSession.sharedInstance()
-            do {
-                try session.setCategory(.playback, mode: .moviePlayback)
-            } catch let error {
-                print(error.localizedDescription)
-            }
+        let session = AVAudioSession.sharedInstance()
+        do {
+            try session.setCategory(.playback, mode: .moviePlayback)
+        } catch let error {
+            print(error.localizedDescription)
         }
+    }
     
 }
