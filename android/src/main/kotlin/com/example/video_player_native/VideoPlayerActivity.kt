@@ -33,6 +33,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
 import org.json.JSONObject
+import java.io.File
 import java.io.IOException
 
 class VideoPlayerActivity : AppCompatActivity() {
@@ -111,6 +112,14 @@ class VideoPlayerActivity : AppCompatActivity() {
     private fun initExoPlayerWithCache(context: Context) {
         val cache = VideoCache.getInstance(context)
 
+        val videoFile = File(videoUrl)
+        val existFile = videoFile.exists()
+        if (!existFile) {
+            Log.e("VideoPlayerActivity", "Arquivo de vídeo não encontrado: $videoUrl")
+            finish()
+            return
+        }
+
         // Salvar metadados de cache (opcional)
         val uri = Uri.parse(videoUrl)
         VideoCache.saveCacheMetadata(context, uri)
@@ -128,9 +137,14 @@ class VideoPlayerActivity : AppCompatActivity() {
         val mediaSourceFactory = DefaultMediaSourceFactory(cacheDataSourceFactory)
 
         // Inicializar o ExoPlayer
-        exoPlayer = ExoPlayer.Builder(context)
-            .setMediaSourceFactory(mediaSourceFactory)
-            .build()
+        exoPlayer = if(existFile){
+            ExoPlayer.Builder(context)
+                .build()
+        } else {
+            ExoPlayer.Builder(context)
+                .setMediaSourceFactory(mediaSourceFactory)
+                .build()
+        }
 
         // Configurar o PlayerView
         playerView.apply {
