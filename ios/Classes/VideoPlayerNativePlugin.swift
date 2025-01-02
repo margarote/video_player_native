@@ -37,20 +37,30 @@ public class VideoPlayerNativePlugin: NSObject, FlutterPlugin, AVPlayerViewContr
         if call.method == "openVideoPlayer" {
             guard let args = call.arguments as? [String: Any],
                   let urlString = args["url"] as? String,
-                  let url = URL(string: urlString),
                   let momentaryId = args["momentaryId"] as? String,
                   let userId = args["userId"] as? String,
                   let fileId = args["fileId"] as? String else {
                 result(FlutterError(code: "INVALID_ARGUMENTS", message: "Missing or invalid arguments", details: nil))
                 return
             }
-            
+
             self.momentaryId = momentaryId
             self.userId = userId
             self.fileId = fileId
             self.videoURL = urlString
-            self.url = url
-            
+
+            // Determine if the URL is remote or local
+            if urlString.starts(with: "http://") || urlString.starts(with: "https://") {
+                self.url = URL(string: urlString)
+            } else {
+                self.url = URL(fileURLWithPath: urlString)
+            }
+
+            guard let url = self.url else {
+                result(FlutterError(code: "INVALID_URL", message: "URL could not be constructed", details: nil))
+                return
+            }
+
             playHLSVideo(url: url)
             result("Video launched successfully")
         } else {
@@ -59,8 +69,16 @@ public class VideoPlayerNativePlugin: NSObject, FlutterPlugin, AVPlayerViewContr
     }
     
     private func playHLSVideo(url: URL) {
-        //        let playerItem = AVPlayerItem(url: url)
-        let playerItem = VideoCacheManager.shared.configureCaching(for: url)
+        let playerItem: AVPlayerItem
+        
+        if url.scheme == "http" || url.scheme == "https" {
+            // URL remota com cache
+            playerItem = VideoCacheManager.shared.configureCaching(for: url)
+        } else {
+            // Path local
+            playerItem = AVPlayerItem(url: url)
+        }
+        
         let player = AVPlayer(playerItem: playerItem)
         
         self.observeHLSProgress(player: player, videoURL: url)
