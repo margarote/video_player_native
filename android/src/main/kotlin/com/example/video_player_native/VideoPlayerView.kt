@@ -111,8 +111,12 @@ class VideoPlayerView(
         exoPlayer.playWhenReady = false
         exoPlayer.setMediaItem(mediaItem)
         exoPlayer.prepare()
-//        val positionMs = (durationInitial * 1000).toLong()
-//        exoPlayer.seekTo(positionMs)
+
+        // Se tiver uma posição inicial, fazer seek quando o player estiver pronto
+        if (durationInitial > 0) {
+            val positionMs = (durationInitial * 1000).toLong()
+            exoPlayer.seekTo(positionMs)
+        }
 
         // Listener para atualizar o estado de bufferização
         exoPlayer.addListener(object : Player.Listener {

@@ -2,6 +2,7 @@ package com.example.video_player_native
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
@@ -54,6 +55,9 @@ class VideoPlayerActivity : AppCompatActivity() {
     // Calcula os bytes transferidos
     var totalBytesConsumed = 0L
     var totalBytesDownloaded = 0L
+
+    // Flag para detectar se está mudando de orientação
+    private var isChangingConfiguration = false
 
     private val handler = Handler(Looper.getMainLooper())
     private val progressUpdateRunnable = object : Runnable {
@@ -266,12 +270,22 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        exoPlayer.pause()
+        // Só pausa se NÃO estiver mudando de configuração (rotação)
+        if (!isChangingConfigurations) {
+            exoPlayer.pause()
+            Log.d("VideoPlayerActivity", "Player pausado (não é rotação)")
+        } else {
+            Log.d("VideoPlayerActivity", "onPause durante rotação - player continua")
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        exoPlayer.playWhenReady = true
+        // Só retoma se NÃO estiver mudando de configuração
+        if (!isChangingConfigurations) {
+            exoPlayer.playWhenReady = true
+            Log.d("VideoPlayerActivity", "Player retomado")
+        }
     }
 
     override fun onDestroy() {
@@ -280,6 +294,37 @@ class VideoPlayerActivity : AppCompatActivity() {
         handler.removeCallbacks(progressUpdateRunnable)
         Log.d("VideoPlayerActivity", "ExoPlayer liberado")
         VideoCache.release(this)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        Log.d("VideoPlayerActivity", "Orientação mudou")
+
+        // Salvar estado de reprodução antes da mudança
+        val wasPlaying = exoPlayer.isPlaying
+        val currentPosition = exoPlayer.currentPosition
+
+        // Trata mudanças de orientação da tela
+        when (newConfig.orientation) {
+            Configuration.ORIENTATION_LANDSCAPE -> {
+                Log.d("VideoPlayerActivity", "Modo paisagem")
+            }
+            Configuration.ORIENTATION_PORTRAIT -> {
+                Log.d("VideoPlayerActivity", "Modo retrato")
+            }
+        }
+
+        // Garantir que o player continue no mesmo estado
+        if (wasPlaying) {
+            // Pequeno delay para garantir que o layout foi ajustado
+            playerView.postDelayed({
+                if (!exoPlayer.isPlaying) {
+                    exoPlayer.seekTo(currentPosition)
+                    exoPlayer.play()
+                    Log.d("VideoPlayerActivity", "Player retomado após rotação")
+                }
+            }, 100)
+        }
     }
 
     companion object {

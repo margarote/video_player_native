@@ -11,6 +11,7 @@ class VideoPlayerNative {
   final MethodChannel _channelNative = const MethodChannel('video_player_native');
   bool isFullscreen = false;
   double currentPosition = 0;
+  double _savedPositionBeforeOrientationChange = 0;
 
   /// Método para abrir a tela nativa do player de vídeo
   Future<void> openVideoPlayer(String url, {required Map<String, String?> params}) async {
@@ -67,11 +68,39 @@ class VideoPlayerNative {
         bool isFullscreen = data['isFullscreen'];
         double currentPosition = double.tryParse(data['currentPosition'].toString()) ?? 0;
 
-        onChangeFullScreen?.call(isFullscreen, currentPosition);
+        // Salvar a posição atual
+        _savedPositionBeforeOrientationChange = currentPosition;
+        this.currentPosition = currentPosition;
 
         if (kDebugMode) {
-          print("Tela cheia: $isFullscreen");
+          print("Tela cheia: $isFullscreen, posição: $currentPosition");
         }
+
+        // Mudar orientação do sistema quando entra/sai de fullscreen
+        if (isFullscreen) {
+          // Entrou em fullscreen - permitir landscape
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.landscapeRight,
+          ]).then((_) {
+            // Após mudar orientação, restaurar posição
+            Future.delayed(const Duration(milliseconds: 500), () {
+              seekToSeconds(currentPosition);
+            });
+          });
+        } else {
+          // Saiu de fullscreen - voltar para portrait
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.portraitUp,
+          ]).then((_) {
+            // Após mudar orientação, restaurar posição
+            Future.delayed(const Duration(milliseconds: 500), () {
+              seekToSeconds(currentPosition);
+            });
+          });
+        }
+
+        onChangeFullScreen?.call(isFullscreen, currentPosition);
         break;
       case 'onTimeUpdate':
         // Recebe os argumentos enviados do lado nativo
@@ -103,11 +132,16 @@ class VideoPlayerNative {
 
   /// Widget para embutir o player de vídeo nativo
   Widget embeddedVideoPlayer(String url, int durationInitial) {
+    // Se temos uma posição salva (após mudança de orientação), usar ela
+    int positionToUse = _savedPositionBeforeOrientationChange > 0
+        ? _savedPositionBeforeOrientationChange.toInt()
+        : (currentPosition > 0 ? currentPosition.toInt() : durationInitial);
+
     if (defaultTargetPlatform == TargetPlatform.android) {
       return VideoPlayerWidgetAndroid(
         videoUrl: url,
         isFullscreen: isFullscreen,
-        durationInitial: durationInitial,
+        durationInitial: positionToUse,
       );
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       // iOS
