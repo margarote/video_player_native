@@ -12,6 +12,7 @@ class VideoPlayerNative {
   bool isFullscreen = false;
   double currentPosition = 0;
   double _savedPositionBeforeOrientationChange = 0;
+  double currentPlaybackSpeed = 1.0;
 
   /// Método para abrir a tela nativa do player de vídeo
   Future<void> openVideoPlayer(String url, {required Map<String, String?> params}) async {
@@ -67,13 +68,15 @@ class VideoPlayerNative {
         Map data = call.arguments;
         bool isFullscreen = data['isFullscreen'];
         double currentPosition = double.tryParse(data['currentPosition'].toString()) ?? 0;
+        double playbackSpeed = double.tryParse(data['playbackSpeed'].toString()) ?? 1.0;
 
-        // Salvar a posição atual
+        // Salvar a posição e velocidade atuais
         _savedPositionBeforeOrientationChange = currentPosition;
         this.currentPosition = currentPosition;
+        this.currentPlaybackSpeed = playbackSpeed;
 
         if (kDebugMode) {
-          print("Tela cheia: $isFullscreen, posição: $currentPosition");
+          print("Tela cheia: $isFullscreen, posição: $currentPosition, velocidade: $playbackSpeed");
         }
 
         // Mudar orientação do sistema quando entra/sai de fullscreen
@@ -142,6 +145,7 @@ class VideoPlayerNative {
         videoUrl: url,
         isFullscreen: isFullscreen,
         durationInitial: positionToUse,
+        playbackSpeed: currentPlaybackSpeed,
       );
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       // iOS

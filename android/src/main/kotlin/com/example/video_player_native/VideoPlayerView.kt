@@ -36,7 +36,12 @@ class VideoPlayerView(
     private val exoPlayer: ExoPlayer
     private val progressBar: ProgressBar
     private val fullscreenButton: ImageButton
+    private val speedButton: ImageButton
+    private val speedText: android.widget.TextView
     private var isFullscreen = false
+    private var currentSpeed = 1.0f
+    private val speeds = floatArrayOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
+    private var currentSpeedIndex = 3 // começa em 1.0x
 
     private val videoPlayerChannel: MethodChannel
 
@@ -62,9 +67,12 @@ class VideoPlayerView(
         playerView = rootView.findViewById(R.id.player_view)
         progressBar = rootView.findViewById(R.id.progress_bar)
         fullscreenButton = rootView.findViewById(R.id.exo_fullscreen_button)
+        speedButton = rootView.findViewById(R.id.exo_speed_button)
+        speedText = rootView.findViewById(R.id.speed_text)
 
         val url = creationParams?.get("url") as? String ?: ""
         val durationInitial = creationParams?.get("duration_initial") as? Int ?: 0
+        val initialSpeed = (creationParams?.get("playback_speed") as? Number)?.toFloat() ?: 1.0f
 
         if (url.isEmpty()) {
             messenger.invokeMethod("onError", "URL do vídeo está vazia")
@@ -118,6 +126,14 @@ class VideoPlayerView(
             exoPlayer.seekTo(positionMs)
         }
 
+        // Aplicar velocidade inicial se diferente de 1.0
+        if (initialSpeed != 1.0f) {
+            // Encontrar o índice correto no array de velocidades
+            val index = speeds.indexOfFirst { it == initialSpeed }
+            currentSpeedIndex = if (index >= 0) index else 3
+            setPlaybackSpeed(initialSpeed)
+        }
+
         // Listener para atualizar o estado de bufferização
         exoPlayer.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) {
@@ -145,6 +161,11 @@ class VideoPlayerView(
         // Configurar o botão de tela cheia
         fullscreenButton.setOnClickListener {
             toggleFullscreen()
+        }
+
+        // Configurar o botão de velocidade
+        speedButton.setOnClickListener {
+            cycleSpeed()
         }
 
         // Configurar o MethodChannel para o VideoPlayerView
@@ -199,6 +220,15 @@ class VideoPlayerView(
                     result.error("INVALID_ARGUMENT", "O parâmetro 'seconds' é necessário", null)
                 }
             }
+            "setPlaybackSpeed" -> {
+                val speed = call.argument<Double>("speed")
+                if (speed != null) {
+                    setPlaybackSpeed(speed.toFloat())
+                    result.success(null)
+                } else {
+                    result.error("INVALID_ARGUMENT", "O parâmetro 'speed' é necessário", null)
+                }
+            }
             "set_fullscreen" -> {
                 val value = call.argument<Boolean>("value") ?: false
                 isFullscreen = value
@@ -214,6 +244,34 @@ class VideoPlayerView(
         }
     }
 
+    private fun setPlaybackSpeed(speed: Float) {
+        val playbackParameters = androidx.media3.common.PlaybackParameters(speed)
+        exoPlayer.playbackParameters = playbackParameters
+        currentSpeed = speed
+        updateSpeedText(speed)
+    }
+
+    private fun updateSpeedText(speed: Float) {
+        val speedLabel = when (speed) {
+            0.25f -> "0.25x"
+            0.5f -> "0.5x"
+            0.75f -> "0.75x"
+            1.0f -> "1x"
+            1.25f -> "1.25x"
+            1.5f -> "1.5x"
+            1.75f -> "1.75x"
+            2.0f -> "2x"
+            else -> "${speed}x"
+        }
+        speedText.text = speedLabel
+    }
+
+    private fun cycleSpeed() {
+        currentSpeedIndex = (currentSpeedIndex + 1) % speeds.size
+        val newSpeed = speeds[currentSpeedIndex]
+        setPlaybackSpeed(newSpeed)
+    }
+
     private fun toggleFullscreen() {
         isFullscreen = !isFullscreen
 
@@ -226,7 +284,8 @@ class VideoPlayerView(
 
         val fullscreenData = mapOf(
             "isFullscreen" to value,
-            "currentPosition" to currentPositionSeconds
+            "currentPosition" to currentPositionSeconds,
+            "playbackSpeed" to currentSpeed
         )
 
         videoPlayerChannel.invokeMethod("onFullscreenChange", fullscreenData)

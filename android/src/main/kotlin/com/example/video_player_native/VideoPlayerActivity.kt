@@ -43,6 +43,12 @@ class VideoPlayerActivity : AppCompatActivity() {
     private lateinit var playerView: PlayerView
     private lateinit var progressBar: ProgressBar
     private lateinit var closeButton: ImageButton
+    private lateinit var speedButton: ImageButton
+    private lateinit var speedText: android.widget.TextView
+
+    private var currentSpeed = 1.0f
+    private val speeds = floatArrayOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
+    private var currentSpeedIndex = 3 // começa em 1.0x
 
     private lateinit var videoUrl: String
     private lateinit var momentaryId: String
@@ -101,6 +107,8 @@ class VideoPlayerActivity : AppCompatActivity() {
         playerView = findViewById(R.id.player_view)
         progressBar = findViewById(R.id.progress_bar)
         closeButton = findViewById(R.id.close_button)
+        speedButton = findViewById(R.id.speed_button)
+        speedText = findViewById(R.id.speed_text)
 
         // Inicializar o ExoPlayer com cache
         initExoPlayerWithCache(this)
@@ -108,6 +116,11 @@ class VideoPlayerActivity : AppCompatActivity() {
         // Configurar o botão de fechar
         closeButton.setOnClickListener {
             finish()
+        }
+
+        // Configurar o botão de velocidade
+        speedButton.setOnClickListener {
+            cycleSpeed()
         }
     }
 
@@ -266,6 +279,38 @@ class VideoPlayerActivity : AppCompatActivity() {
                 response.close()
             }
         })
+    }
+
+    /**
+     * Método para definir a velocidade de reprodução
+     */
+    fun setPlaybackSpeed(speed: Float) {
+        val playbackParameters = androidx.media3.common.PlaybackParameters(speed)
+        exoPlayer.playbackParameters = playbackParameters
+        currentSpeed = speed
+        updateSpeedText(speed)
+        Log.d("VideoPlayerActivity", "Velocidade de reprodução alterada para: $speed")
+    }
+
+    private fun updateSpeedText(speed: Float) {
+        val speedLabel = when (speed) {
+            0.25f -> "0.25x"
+            0.5f -> "0.5x"
+            0.75f -> "0.75x"
+            1.0f -> "1x"
+            1.25f -> "1.25x"
+            1.5f -> "1.5x"
+            1.75f -> "1.75x"
+            2.0f -> "2x"
+            else -> "${speed}x"
+        }
+        speedText.text = speedLabel
+    }
+
+    private fun cycleSpeed() {
+        currentSpeedIndex = (currentSpeedIndex + 1) % speeds.size
+        val newSpeed = speeds[currentSpeedIndex]
+        setPlaybackSpeed(newSpeed)
     }
 
     override fun onPause() {

@@ -37,4 +37,41 @@
         android:layout_alignParentEnd="true"
         app:tint="#FFFFFF" />
 
+    <!-- Container de velocidade (botão + texto) -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_margin="16dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true">
+
+        <!-- Botão de velocidade -->
+        <ImageButton
+            android:id="@+id/speed_button"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Velocidade de reprodução"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_speed"
+            app:tint="#FFFFFF" />
+
+        <!-- Texto mostrando a velocidade atual -->
+        <TextView
+            android:id="@+id/speed_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1x"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:minWidth="36dp"
+            android:gravity="center"
+            android:includeFontPadding="false" />
+
+    </LinearLayout>
+
 </RelativeLayout>

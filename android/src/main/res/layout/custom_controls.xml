@@ -8,14 +8,68 @@
         android:id="@+id/exo_controller"
         layout="@layout/exo_player_control_view" />
 
-    <!-- Botão de tela cheia -->
-    <ImageButton
-        android:id="@+id/exo_fullscreen_button"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="end|bottom"
-        android:layout_margin="16dp"
-        android:background="@android:color/transparent"
-        android:src="@drawable/ic_fullscreen" />
+    <!-- Container para os controles customizados na parte inferior -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp"
+        android:paddingTop="8dp">
+
+        <!-- Espaço para alinhar com o tempo (após play e tempo atual/duração) -->
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <!-- Container de velocidade (botão + texto) -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginEnd="8dp">
+
+            <!-- Botão de velocidade -->
+            <ImageButton
+                android:id="@+id/exo_speed_button"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="4dp"
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_speed"
+                android:scaleType="centerInside"
+                android:contentDescription="Velocidade de reprodução" />
+
+            <!-- Texto mostrando a velocidade atual -->
+            <TextView
+                android:id="@+id/speed_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1x"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:minWidth="32dp"
+                android:gravity="center"
+                android:includeFontPadding="false" />
+
+        </LinearLayout>
+
+        <!-- Botão de tela cheia -->
+        <ImageButton
+            android:id="@+id/exo_fullscreen_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_fullscreen"
+            android:scaleType="centerInside"
+            android:contentDescription="Tela cheia" />
+
+    </LinearLayout>
 
 </FrameLayout>
