@@ -149,17 +149,13 @@ class VideoPlayerNative {
       );
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       // iOS
-      return SizedBox(
-        height: 308,
-        width: double.infinity,
-        child: UiKitView(
-          viewType: 'video_player_native_view',
-          layoutDirection: TextDirection.ltr,
-          creationParams: {
-            'url': url,
-          },
-          creationParamsCodec: const StandardMessageCodec(),
-        ),
+      return UiKitView(
+        viewType: 'video_player_native_view',
+        layoutDirection: TextDirection.ltr,
+        creationParams: {
+          'url': url,
+        },
+        creationParamsCodec: const StandardMessageCodec(),
       );
     } else {
       return const SizedBox();
