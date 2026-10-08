@@ -1,5 +1,6 @@
 package com.example.video_player_native
 
+import android.app.Activity
 import android.content.Context
 import android.graphics.Color
 import android.net.Uri
@@ -28,7 +29,8 @@ import io.flutter.plugin.common.MethodCall
 class VideoPlayerView(
     context: Context,
     creationParams: Map<String, Any>?,
-    messenger: MethodChannel
+    messenger: MethodChannel,
+    private val activityProvider: () -> Activity?
 ) : PlatformView, MethodChannel.MethodCallHandler {
 
     private val rootView: View
@@ -136,6 +138,11 @@ class VideoPlayerView(
 
         // Listener para atualizar o estado de bufferização
         exoPlayer.addListener(object : Player.Listener {
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                // Sem isso o Android apaga a tela no meio do vídeo
+                KeepScreenOn.update(activityProvider()?.window, this@VideoPlayerView, isPlaying)
+            }
+
             override fun onPlaybackStateChanged(state: Int) {
                 when (state) {
                     Player.STATE_BUFFERING -> progressBar.visibility = View.VISIBLE
@@ -302,6 +309,7 @@ class VideoPlayerView(
 
     override fun dispose() {
         stopUpdatingTime()
+        KeepScreenOn.update(activityProvider()?.window, this, false)
         exoPlayer.release()
     }
 

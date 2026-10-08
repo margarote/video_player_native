@@ -24,7 +24,7 @@ class VideoPlayerNativePlugin : FlutterPlugin, MethodChannel.MethodCallHandler, 
         // Registrar o PlatformView
         flutterPluginBinding
             .platformViewRegistry
-            .registerViewFactory("video_player_native_view", VideoPlayerViewFactory(channel))
+            .registerViewFactory("video_player_native_view", VideoPlayerViewFactory(channel) { activity })
     }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: MethodChannel.Result) {
